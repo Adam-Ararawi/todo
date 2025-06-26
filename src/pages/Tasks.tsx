@@ -1,22 +1,20 @@
-import { useEffect } from "react";
-import { AppDispatch, RootState } from "../app/store";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchTasks } from "../featuers/tasks/tasksSlice";
 import TaskCard from "../featuers/tasks/components/TaskCard";
 import TasksForm from "../featuers/tasks/components/TaskForm";
+import { gql, useQuery } from "@apollo/client";
+import { Task } from "../featuers/tasks/types";
+import { GET_TASKS } from "../featuers/tasks/graphql/queries";
 
 export default function Tasks() {
-    const tasks = useSelector((state: RootState) => state.tasks);
-    const dispath = useDispatch<AppDispatch>();
-    useEffect(() => {
-        dispath(fetchTasks())
-    }, [dispath])
+    const { loading, error, data } = useQuery<{ findAll: Task[] }>(GET_TASKS);
+
+    if (loading) return <p>جاري التحميل...</p>;
+    if (error) return <p>خطأ: {error.message}</p>;
 
     return (
         <div>
             <TasksForm />
             <hr />
-            {tasks.tasks.map(task => (
+            {data?.findAll.map((task: Task) => (
                 <TaskCard task={task} key={task.id} />
             ))}
         </div>

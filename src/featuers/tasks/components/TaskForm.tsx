@@ -1,24 +1,26 @@
+import { useMutation } from "@apollo/client"
 import { useState } from "react"
-import { useDispatch } from "react-redux"
-import { createTask } from "../tasksSlice"
-import { AppDispatch } from "../../../app/store"
+import { CREATE_TASK, GET_TASKS } from "../graphql/queries"
 
 export default function TasksForm() {
-    const dispatch = useDispatch<AppDispatch>()
+
+    const [createTask, { loading, error }] = useMutation(CREATE_TASK, {
+        refetchQueries: [{ query: GET_TASKS }]
+    })
     const [title, setTitle] = useState('')
 
-    const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        dispatch(createTask(title))
+        createTask({ variables: { createTaskInput: { title } } })
         setTitle('')
     }
-
     const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value)
     }
+
     return (
         <div>
-            <form onSubmit={onSubmit}>
+            <form onSubmit={handleSubmit}>
                 <input type="text" value={title} onChange={onChange} />
                 <button type="submit">Create</button>
             </form>

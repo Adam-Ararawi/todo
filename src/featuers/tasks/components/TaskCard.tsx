@@ -1,31 +1,54 @@
-import { useDispatch } from "react-redux";
+import { useMutation } from "@apollo/client";
 import { Task } from "../types";
-import { AppDispatch } from "../../../app/store";
-import { deleteTask, updateTask } from "../tasksSlice";
 import React, { useState } from "react";
+import { DELETE_TASK, GET_TASKS, UPDATE_TASK } from "../graphql/queries";
 
 export default function TaskCard({ task }: { task: Task }) {
+    const [updateTaskInput, { loading: loading_update, error: error_update }] = useMutation(UPDATE_TASK, {
+        refetchQueries: [{ query: GET_TASKS }],
+    })
+
+    const [deleteTask, { loading: loading_delete, error: error_delete }] = useMutation(DELETE_TASK, {
+        refetchQueries: [{ query: GET_TASKS }],
+    })
+
     const [title, setTitle] = useState('')
-    const dispatch = useDispatch<AppDispatch>()
-
-    const handleDelete = () => {
-        dispatch(deleteTask(task.id))
-    }
-
-    const handleComplete = () => {
-        dispatch(updateTask({ id: task.id, completed: !task.completed }))
-    }
 
     const handleTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
         setTitle(e.target.value)
     }
 
-    const onSubmitTitle = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleComplete = () => {
+        updateTaskInput({
+            variables: {
+                updateTaskInput: {
+                    id: task.id,
+                    title: task.title,
+                    completed: !task.completed
+                }
+            }
+        })
+    }
+    const handleDelete = () => {
+        deleteTask({
+            variables: {
+                id: task.id
+            }
+        })
+    }
+    const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        dispatch(updateTask({ id: task.id, title }))
+        updateTaskInput({
+            variables: {
+                updateTaskInput: {
+                    id: task.id,
+                    title: title,
+                    completed: task.completed
+                }
+            }
+        })
         setTitle('')
     }
-
     return (
         <div>
 
@@ -33,7 +56,7 @@ export default function TaskCard({ task }: { task: Task }) {
             <p>Completed : {task.completed ? "Yes" : "NO"}</p>
             <p>Created At : {task.createdAt.toLocaleString()}</p>
             <div>
-                <form onSubmit={onSubmitTitle}>
+                <form onSubmit={onSubmit}>
                     <input value={title} onChange={handleTitle} />
                     <button type="submit">Update</button>
                 </form>
